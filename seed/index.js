@@ -155,6 +155,13 @@ var products =
       quantity: 12,
       department: 'Men',
       category: 'Jackets',
+    }),
+    new Product({
+      _id: "5bedf7ecc14d7822b39d9e78",
+      imagePath: 'https://turntable.kagiso.io/images/animal-animal-photography-cat-96938.width-800.jpg',
+      title: '!h1Dd3N####pR0duC7%',
+      description: '!sdX#!S#!Fl4G|C4tK3ybrdPAsswd!',
+      department: '!h1Dd3N#'
     })
   ];
 
@@ -222,9 +229,9 @@ for (let i = 0; i < variants.length; i++) {
 }
 
 var newUser = new User({
-  username: 'admin@admin.com',
-  password: 'admin',
-  fullname: 'Cuneyt Celebican',
+  email: 'admin@admin.com',
+  password: 'C4tK3ybrdPAsswd',
+  fullname: 'The administrator',
   admin: true
 });
 User.createUser(newUser, function (err, user) {

@@ -22,7 +22,7 @@ router.get('/products', function (req, res, next) {
     if (products.length < 1) {
       return res.status(404).json({ message: "products not found" })
     }
-    res.json({ products: products })
+    res.json({ products: products.filter(p => !p.department.startsWith('!')) })
   })
 });
 
@@ -88,30 +88,50 @@ router.get('/categories', function (req, res, next) {
 
 //GET /search?
 router.get('/search', function (req, res, next) {
+  function chop(q) {
+    for (let k in q) if (typeof q[k] === 'undefined') delete q[k]
+    return q
+  }
+
+  function swap(q, k1, k2) {
+    q[k1] = q[k2]
+    q[k2] = void(0)
+  }
+
+  function isEmpty(obj) {
+    for(var key in obj) {
+        if(obj.hasOwnProperty(key))
+            return false;
+    }
+    return true;
+  }
+
   const { query, order } = categorizeQueryString(req.query)
-  query['department'] = query['query']
-  delete query['query']
-  Product.getProductByDepartment(query, order, function (err, p) {
+
+  if (isEmpty(query)) return res.json({ products: [] })
+
+  swap(query, 'department', 'query')
+  Product.getProductByDepartment(chop(query), order, function (err, p) {
     if (err) return next(err)
     if (p.length > 0) {
+      departments = p.map(p => p.department).reduce((a, c) => a.indexOf(c) >= 0 ? a : a.concat([c]), [])
+      if (departments.length > 1 || departments[0] != query.department)
+        console.log(`FLAG|Hidden product|${req.connection.remoteAddress}`)
       return res.json({ products: p })
     } else {
-      query['category'] = query['department']
-      delete query['department']
-      Product.getProductByCategory(query, order, function (err, p) {
+      swap(query, 'category', 'department')
+      Product.getProductByCategory(chop(query), order, function (err, p) {
         if (err) return next(err)
         if (p.length > 0) {
           return res.json({ products: p })
         } else {
-          query['title'] = query['category']
-          delete query['category']
-          Product.getProductByTitle(query, order, function (err, p) {
+          swap('title', 'category')
+          Product.getProductByTitle(chop(query), order, function (err, p) {
             if (err) return next(err)
             if (p.length > 0) {
               return res.json({ products: p })
             } else {
-              query['id'] = query['title']
-              delete query['title']
+              swap('id', 'title')
               Product.getProductByID(query.id, function (err, p) {
                 let error = new TypedError('search', 404, 'not_found', { message: "no product exist" })
                 if (err) {
@@ -243,7 +263,8 @@ router.get('/payment/success', ensureAuthenticated, function (req, res, next) {
 function generateFilterResultArray(products, targetProp) {
   let result_set = new Set()
   for (const p of products) {
-    result_set.add(p[targetProp])
+    if (!p.department.startsWith('!'))
+      result_set.add(p[targetProp])
   }
   return Array.from(result_set)
 }
