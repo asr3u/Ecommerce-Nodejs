@@ -1,14 +1,44 @@
 var User = require('../models/User');
 var Category = require('../models/Category');
 var Department = require('../models/Department');
+const fetch = require('node-fetch');
+const fs = require('fs')
 var Product = require('../models/Product');
 var Variant = require('../models/Variant');
 var mongoose = require('mongoose');
 const mongoConfig = require('../configs/mongo-config')
+const path = require('path')
+const uuidv4 = require('uuid/v4')
+const url = require('url');
 //mongoose.connect('mongodb://localhost/shoppingApp');
 //mongoose.connect('mongodb://localhost/myShoppingApp3', { useNewUrlParser: true, useCreateIndex: true, });
 mongoose.connect(mongoConfig, { useNewUrlParser: true, useCreateIndex: true, });
 
+const imagesDir = process.env.IMGES_DIR
+const imageServerURL = process.env.IMAGE_SERVER_URL
+
+if (!imagesDir || !imageServerURL) {
+  console.error('ERROR: IMGES_DIR and IMAGE_SERVER_URL environment vars must be set')
+  process.exit(1)
+}
+
+if (!fs.existsSync(imagesDir))
+  fs.mkdirSync(imagesDir)
+
+function fetchImage(imageURL, destDir, baseURL) {
+  const image_name = uuidv4() + '.jpg'
+  const dest = path.join(destDir, image_name)
+  const errorHandler = () => {
+    console.error(`ERROR: can't fetch ${imageURL}`)
+    process.exit(1)
+  }
+  fetch(imageURL).then(res => {
+    if (res.status != 200) errorHandler()
+    const out = fs.createWriteStream(dest)
+    res.body.pipe(out).on('error', errorHandler)
+  }).catch(errorHandler)
+  return [url.resolve(baseURL, image_name), dest]
+}
 
 var categories =
   [
@@ -165,8 +195,13 @@ var products =
     })
   ];
 
+
 for (let i = 0; i < products.length; i++) {
-  products[i].save(function (e, r) {
+  const product = products[i]
+  const [externalImgURL, localImgURL] = fetchImage(product.imagePath, imagesDir, imageServerURL)
+  console.log(`${product.imagePath} fetched to ${localImgURL} and server on ${externalImgURL}`)
+  product.imagePath = externalImgURL
+  product.save(function (e, r) {
     if (i === products.length - 1) {
       exit();
     }

@@ -33,5 +33,9 @@
     "paypal-rest-sdk": "^1.8.1",
     "serve-favicon": "^2.4.5",
     "voucher-code-generator": "^1.1.1"
+  },
+  "devDependencies": {
+    "node-fetch": "^2.6.0",
+    "uuid": "^3.3.3"
   }
 }
