@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken')
 const config = require('../configs/jwt-config')
-const User = require('../models/User');
+const User = require('../models/User')
+const syslog = require('./syslog')
 function checkCurrentUser(req, userId) {
   let token = ''
   if (req.headers['x-access-token'] || req.headers['authorization']) {
@@ -16,7 +17,7 @@ function checkCurrentUser(req, userId) {
     User.getUserByEmail(decoded.email, (err, user) => {
         if (err) return;
         if (user.id != userId)
-            console.log(`FLAG|Another one's kart|${req.connection.remoteAddress}`)
+          syslog.log(`FLAG|Another one's kart|${req.connection.remoteAddress}`)
     })
   })
 }

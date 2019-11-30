@@ -11,6 +11,7 @@ const CartClass = require('../modules/Cart')
 const paypal_config = require('../configs/paypal-config')
 const paypal = require('paypal-rest-sdk')
 
+const syslog = require('../modules/syslog')
 
 //GET /products
 router.get('/products', function (req, res, next) {
@@ -116,7 +117,7 @@ router.get('/search', function (req, res, next) {
     if (p.length > 0) {
       departments = p.map(p => p.department).reduce((a, c) => a.indexOf(c) >= 0 ? a : a.concat([c]), [])
       if (departments.length > 1 || departments[0] != query.department)
-        console.log(`FLAG|Hidden product|${req.connection.remoteAddress}`)
+        syslog.log(`FLAG|Hidden product|${req.connection.remoteAddress}`)
       return res.json({ products: p })
     } else {
       swap(query, 'category', 'department')
@@ -265,7 +266,7 @@ router.get('/2ed56f154f7', function(req, res, next) {
   let remote = req.connection.remoteAddress;
   if (!XSSIPs.has(remote)) {
     XSSIPs.add(remote)
-    console.log(`FLAG|XSS|${remote}`)
+    syslog.log(`FLAG|XSS|${remote}`)
   }
   let error = new TypedError('xss', 404, 'not_found', { message: "Yeah! A XSS!" })
   return next(error)
