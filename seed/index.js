@@ -15,7 +15,9 @@ const url = require('url');
 mongoose.connect(mongoConfig, { useNewUrlParser: true, useCreateIndex: true, });
 
 const imagesDir = process.env.IMGES_DIR
-const imageServerURL = process.env.IMAGE_SERVER_URL
+let imageServerURL = process.env.IMAGE_SERVER_URL
+if (imageServerURL.endsWith('/'))
+  imageServerURL = imageServerURL.slice(0, - 1);
 
 if (!imagesDir || !imageServerURL) {
   console.error('ERROR: IMGES_DIR and IMAGE_SERVER_URL environment vars must be set')
@@ -37,7 +39,7 @@ function fetchImage(imageURL, destDir, baseURL) {
     const out = fs.createWriteStream(dest)
     res.body.pipe(out).on('error', errorHandler)
   }).catch(errorHandler)
-  return [url.resolve(baseURL, image_name), dest]
+  return [`${baseURL}/${image_name}`, dest]
 }
 
 var categories =

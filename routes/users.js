@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken')
 const config = require('../configs/jwt-config')
 const ensureAuthenticated = require('../modules/ensureAuthenticated')
+const checkCurrentUser = require('../modules/checkCurrentUser')
 const User = require('../models/User');
 const Cart = require('../models/Cart');
 const CartClass = require('../modules/Cart')
@@ -94,6 +95,8 @@ router.post('/login', function (req, res, next) {
 //GET cart
 router.get('/:userId/cart', ensureAuthenticated, function (req, res, next) {
   let userId = req.params.userId
+  checkCurrentUser(req, userId)
+
   Cart.getCartByUserId(userId, function (err, cart) {
     if (err) return next(err)
     if (cart.length < 1) {
@@ -108,7 +111,7 @@ router.get('/:userId/cart', ensureAuthenticated, function (req, res, next) {
 router.post('/:userId/cart', ensureAuthenticated, function (req, res, next) {
   let userId = req.params.userId
   let { productId, increase, decrease } = req.body
-  // let { color, size } = requestProduct.product
+  checkCurrentUser(req, userId)
 
   Cart.getCartByUserId(userId, function (err, c) {
     if (err) return next(err)

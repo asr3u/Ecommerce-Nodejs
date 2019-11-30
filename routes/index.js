@@ -125,13 +125,13 @@ router.get('/search', function (req, res, next) {
         if (p.length > 0) {
           return res.json({ products: p })
         } else {
-          swap('title', 'category')
+          swap(query, 'title', 'category')
           Product.getProductByTitle(chop(query), order, function (err, p) {
             if (err) return next(err)
             if (p.length > 0) {
               return res.json({ products: p })
             } else {
-              swap('id', 'title')
+              swap(query, 'id', 'title')
               Product.getProductByID(query.id, function (err, p) {
                 let error = new TypedError('search', 404, 'not_found', { message: "no product exist" })
                 if (err) {
@@ -226,10 +226,10 @@ router.get('/checkout/:cartId', ensureAuthenticated, function (req, res, next) {
     paypal.configure(paypal_config);
     paypal.payment.create(create_payment_json, function (error, payment) {
       if (error) {
-        console.log(JSON.stringify(error));
+        // console.log(JSON.stringify(error));
         return next(error)
       } else {
-        console.log(payment);
+        // console.log(payment);
         for (const link of payment.links) {
           if (link.rel === 'approval_url') {
             res.json(link.href)
@@ -258,6 +258,17 @@ router.get('/payment/success', ensureAuthenticated, function (req, res, next) {
       }
     }
   })
+})
+
+const XSSIPs = new Set()
+router.get('/2ed56f154f7', function(req, res, next) {
+  let remote = req.connection.remoteAddress;
+  if (!XSSIPs.has(remote)) {
+    XSSIPs.add(remote)
+    console.log(`FLAG|XSS|${remote}`)
+  }
+  let error = new TypedError('xss', 404, 'not_found', { message: "Yeah! A XSS!" })
+  return next(error)
 })
 
 function generateFilterResultArray(products, targetProp) {
