@@ -32,7 +32,7 @@ function fetchImage(imageURL, destDir, baseURL) {
   const dest = path.join(destDir, image_name)
   const errorHandler = () => {
     console.error(`ERROR: can't fetch ${imageURL}`)
-    process.exit(1)
+    // process.exit(1)
   }
   fetch(imageURL).then(res => {
     if (res.status != 200) errorHandler()
